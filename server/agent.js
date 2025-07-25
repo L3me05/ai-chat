@@ -1,66 +1,84 @@
-import {createReactAgent} from "@langchain/langgraph/prebuilt"
-import {ChatOpenAI, OpenAIEmbeddings} from "@langchain/openai";
-import {PDFLoader} from "@langchain/community/document_loaders/fs/pdf";
-import {RecursiveCharacterTextSplitter} from "@langchain/textsplitters";
-import {MemoryVectorStore} from "langchain/vectorstores/memory";
-import {tool} from '@langchain/core/tools';
-import {z} from 'zod';
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { ChatOpenAI } from "@langchain/openai";
+import { tool } from '@langchain/core/tools';
+import { z } from 'zod';
+import { MemorySaver } from "@langchain/langgraph";
+import { vectorStore, addDataToVectorStore } from "./embeddings.js";
+import { existsSync } from 'fs';
+import path from "path";
+
+
+
+
+
+// Verifica del file PDF
+// Usa path.resolve per gestire i percorsi in modo cross-platform
+// const __filename = fileUrltoPath(import.meta.url);
+const pdfPath = path.resolve('C:\\Users\\dimar\\ReactProject\\ai-chat\\server\\data\\Seconda_guerra_modiale.pdf');
+
+// Aggiungi un controllo esplicito per il file
+if (!existsSync(pdfPath)) {
+    console.error(`❌ File PDF non trovato: ${pdfPath}`);
+    console.error('Assicurati di aver inserito il file PDF nella cartella ./data/');
+    process.exit(1);
+}
+
+
+try {
+    await addDataToVectorStore(pdfPath);
+    console.log('✅ PDF caricato con successo nel vector store');
+} catch (error) {
+    console.error('❌ Errore durante il caricamento del PDF:', error);
+    process.exit(1);
+}
 
 const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",     //gpt-4o
+    modelName: "gpt-3.5-turbo",     // Utilizzare "gpt-4" per risultati migliori
     temperature: 0,
-})
-
-// load del pdf
-const loader = new PDFLoader("./data/Seconda_guerra_modiale.pdf");
-const docs = await loader.load();
-
-//split into chunks
-const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
 });
 
-const chunks = await  splitter.splitDocuments(docs);
-console.log(chunks);
-
-//Embed the chunks
-const embeddings = new OpenAIEmbeddings({
-    model: 'text-embedding-3-large',
-})
-
-const vectorStore = new MemoryVectorStore(embeddings);
-await vectorStore.addDocuments(chunks);
-
-//Retrieve the most relevant chunks
-// const retriveDocs = await vectorStore.similaritySearch('l\' armistizio chiesto dalla francia', 1);
-// console.log('--------------------------------------------------------------------');
-// console.log(retriveDocs);
-
-//retrieval tool
-const retriveTool = tool(async ({query}) => {
-    console.log('Retrieving docs for query: -------------------------------');
-    console.log(query);
-    const retriveDocs = await vectorStore.similaritySearch(query, 3);
-    return retriveDocs
-        .map((doc) => doc.pageContent)
-        .join('\n');
+// Strumento di recupero
+const retrieveTool = tool(async ({query}) => {
+    try {
+        const retrieveDocs = await vectorStore.similaritySearch(query, 3);
+        console.log(`📚 Trovati ${retrieveDocs.length} documenti pertinenti`);
+        return retrieveDocs
+            .map((doc) => doc.pageContent)
+            .join('\n');
+    } catch (error) {
+        console.error('❌ Errore durante la ricerca:', error);
+        throw error;
+    }
 }, {
-    name:'retrieve',
-    description:'Retrieve the most relevant chunks of text from a pdf file',
+    name: 'retrieve',
+    description: 'Recupera i frammenti di testo più rilevanti dal file PDF',
     schema: z.object({
-        query: z.string(),
+        query: z.string().min(1, 'La query non può essere vuota'),
     }),
 });
 
+// Creazione dell'agente
+const checkpointer = new MemorySaver();
 
-//create an agent
-const agent = createReactAgent({llm, tools: [retriveTool,]});
-
-
-//send a request and print the response
-const result = await agent.invoke({
-    messages:[{ role: 'user', content: 'Quali sono le cause principali della Seconda Guerra Mondiale?'}],
+const agent = createReactAgent({
+    llm,
+    tools: [retrieveTool],
+    checkpointer,
 });
-console.log('\n🧠 Risposta finale:');
-console.log(result.messages.at(-1)?.content);
+
+// Invio della richiesta
+try {
+    const result = await agent.invoke({
+        messages: [{
+            role: 'user',
+            content: 'Quali sono le cause principali della Seconda Guerra Mondiale?'
+        }],
+    }, {
+        configurable: { thread_id: 1 }
+    });
+
+    console.log('\n🧠 Risposta finale:');
+    console.log(result.messages.at(-1)?.content);
+} catch (error) {
+    console.error('❌ Errore durante l\'esecuzione dell\'agente:', error);
+}
