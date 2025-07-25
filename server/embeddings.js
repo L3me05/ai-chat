@@ -1,27 +1,39 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { existsSync } from "fs";
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
-import dotenv from 'dotenv';
+import path from 'node:path';
+import crypto from 'node:crypto';
 
-// Carica le variabili d'ambiente
-dotenv.config();
-
-// Dichiara vectorStore come variabile globale
 export let vectorStore = null;
 
 const embeddings = new OpenAIEmbeddings({
     model: 'text-embedding-3-large',
 });
 
-const initializeVectorStorage = async () => {
-    try {
-        // Verifica che DB_URL sia definito
-        if (!process.env.DB_URL) {
-            throw new Error('Variabile DB_URL non definita nel file .env');
-        }
+// Funzione per generare un hash del contenuto del file
+const generateFileHash = (filePath) => {
+    const fileBuffer = readFileSync(filePath);
+    return crypto.createHash('md5').update(fileBuffer).digest('hex');
+};
 
+// Funzione per gestire il tracking dei file già elaborati
+const getProcessedFilesLog = () => {
+    const logPath = path.resolve('./processed_files.json');
+    try {
+        return existsSync(logPath) 
+            ? JSON.parse(readFileSync(logPath, 'utf-8')) 
+            : {};
+    } catch {
+        return {};
+    }
+};
+
+export const initializeVectorStore = async () => {
+    if (vectorStore) return vectorStore;
+
+    try {
         vectorStore = await PGVectorStore.initialize(embeddings, {
             postgresConnectionOptions: {
                 connectionString: process.env.DB_URL,
@@ -38,9 +50,9 @@ const initializeVectorStorage = async () => {
         
         console.log('Vector store inizializzato con successo');
         return vectorStore;
-    } catch (err) {
-        console.error('Errore durante l\'inizializzazione del vector store', err);
-        throw err;
+    } catch (error) {
+        console.error('Errore durante l\'inizializzazione del vector store:', error);
+        throw error;
     }
 };
 
@@ -49,23 +61,27 @@ export const addDataToVectorStore = async (pdfPath) => {
         throw new Error(`File PDF non trovato: ${pdfPath}`);
     }
 
+    // Calcola l'hash del file
+    const fileHash = generateFileHash(pdfPath);
+    
+    // Controlla se il file è già stato elaborato
+    const processedFiles = getProcessedFilesLog();
+    if (processedFiles[pdfPath] === fileHash) {
+        console.log(`✅ Documento già presente nel database. Nessuna elaborazione necessaria.`);
+        return false;
+    }
+
     try {
         // Inizializza il vector store se non è già stato fatto
         if (!vectorStore) {
-            console.log('Inizializzo il vectorStore');
-            await initializeVectorStorage();
+            await initializeVectorStore();
         }
 
-        // Verifica che vectorStore sia stato correttamente inizializzato
-        if (!vectorStore) {
-            throw new Error('Impossibile inizializzare il vector store');
-        }
-
-        // load del pdf
+        // Carica e processa il PDF
         const loader = new PDFLoader(pdfPath);
         const docs = await loader.load();
 
-        // split into chunks
+        // Suddividi in chunk
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 1000,
             chunkOverlap: 200,
@@ -73,9 +89,16 @@ export const addDataToVectorStore = async (pdfPath) => {
 
         const chunks = await splitter.splitDocuments(docs);
 
-        // Embed the chunks
+        // Aggiungi i documenti al vector store
         await vectorStore.addDocuments(chunks);
+        
+        // Aggiorna il log dei file elaborati
+        const logPath = path.resolve('./processed_files.json');
+        processedFiles[pdfPath] = fileHash;
+        writeFileSync(logPath, JSON.stringify(processedFiles, null, 2));
+
         console.log(`✅ Documento elaborato con successo: ${chunks.length} chunks creati`);
+        return true;
     } catch (error) {
         console.error('❌ Errore durante l\'elaborazione del documento:', error);
         throw error;
