@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #121212;
+  --color-surface: #1e1e1e;
+  --color-primary: #bb86fc;
+  --color-text: #e0e0e0;
+  --color-secondary: #a0a0a0;
+  --color-user-message: #2d2d2d;
+  --color-ai-message: #242424;
+  --color-border: #333333;
+  --color-disabled: #505050;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+    @apply m-0 font-sans antialiased bg-background text-text;
+}
+
+.message{
+    @apply flex gap-3 px-4 py-3 rounded-lg max-w-full transition-opacity duration-300 ease-in-out;
+}
+
+.ai-message{
+    @apply bg-ai-message self-start;
+}
+
+.message-content{
+    @apply break-words whitespace-pre-wrap;
+}
+
+.message-avatar{
+    @apply flex-shrink-0 font-semibold text-xs text-primary w-8 h-8 flex items-center justify-center rounded-full bg-[rgba(187,134,252,0.1)];
+}
+
+.user-message{
+    @apply bg-user-message self-end;
+}

@@ -1,7 +1,30 @@
 {
-  "dependencies": {
-    "@types/express": "^5.0.3",
-    "cors": "^2.8.5",
-    "express": "^5.1.0"
+  "name": "ai-chat",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "concurrently \"npm run server:start\" \"npm run client:preview\"",
+    "server:start": "cd server && npm start",
+    "client:preview": "cd client && npm run preview"
+
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/L3me05/ai-chat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/L3me05/ai-chat/issues"
+  },
+  "homepage": "https://github.com/L3me05/ai-chat#readme",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   }
 }

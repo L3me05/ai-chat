@@ -7,69 +7,98 @@ import { vectorStore, addDataToVectorStore, initializeVectorStore } from "./embe
 import { existsSync } from 'fs';
 import path from "path";
 
-// Verifica del file PDF
-const pdfPath = path.resolve('C:\\Users\\dimar\\ReactProject\\ai-chat\\server\\data\\Seconda_guerra_modiale.pdf');
+// Variabili globali
+let agent = null;
+let isInitialized = false;
 
-// Aggiungi un controllo esplicito per il file
-if (!existsSync(pdfPath)) {
-    console.error(`❌ File PDF non trovato: ${pdfPath}`);
-    console.error('Assicurati di aver inserito il file PDF nella cartella ./data/');
-    process.exit(1);
-}
 
-try {
-    // Inizializza il vector store PRIMA di elaborare il PDF
-    await initializeVectorStore();
-
-    const wasProcessed = await addDataToVectorStore(pdfPath);
-    if (wasProcessed) {
-        console.log('✅ PDF caricato con successo nel vector store');
-    } else {
-        console.log('✅ PDF già presente nel vector store');
+const initializeAgent = async () => {
+    if (isInitialized) {
+        console.log('✅ Agente già inizializzato');
+        return agent;
     }
-} catch (error) {
-    console.error('❌ Errore durante l\'inizializzazione o caricamento del PDF:', error);
-    process.exit(1);
-}
 
-const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    temperature: 0,
-});
+    console.log('🚀 Inizializzo l\'agente...');
 
-// Strumento di recupero
-const retrieveTool = tool(async ({query}) => {
+    // Verifica del file PDF
+    const pdfPath = path.resolve('./data/Seconda_guerra_modiale.pdf');
+
+    if (!existsSync(pdfPath)) {
+        console.error(`❌ File PDF non trovato: ${pdfPath}`);
+        console.error('Assicurati di aver inserito il file PDF nella cartella ./data/');
+        throw new Error('File PDF non trovato');
+    }
+
     try {
-        // Assicurati che vectorStore sia definito
-        if (!vectorStore) {
-            await initializeVectorStore();
-        }
+        // Ora le variabili d'ambiente sono disponibili!
+        console.log('🔗 Connessione al database...');
+        await initializeVectorStore();
 
-        const retrieveDocs = await vectorStore.similaritySearch(query, 3);
-        console.log(`📚 Trovati ${retrieveDocs.length} documenti pertinenti`);
-        return retrieveDocs
-            .map((doc) => doc.pageContent)
-            .join('\n');
+        console.log('📄 Elaborazione PDF...');
+        const wasProcessed = await addDataToVectorStore(pdfPath);
+        if (wasProcessed) {
+            console.log('✅ PDF caricato con successo nel vector store');
+        } else {
+            console.log('✅ PDF già presente nel vector store');
+        }
     } catch (error) {
-        console.error('❌ Errore durante la ricerca:', error);
+        console.error('❌ Errore durante l\'inizializzazione del PDF:', error);
         throw error;
     }
-}, {
-    name: 'retrieve',
-    description: 'Recupera i frammenti di testo più rilevanti dal file PDF',
-    schema: z.object({
-        query: z.string().min(1, 'La query non può essere vuota'),
-    }),
-});
 
-// Creazione dell'agente
-const checkpointer = new MemorySaver();
+    // Crea il modello LLM
+    const llm = new ChatOpenAI({
+        modelName: "gpt-3.5-turbo",
+        temperature: 0,
+        apiKey: process.env.OPENAI_API_KEY,
+    });
 
-export const agent = createReactAgent({
-    llm,
-    tools: [retrieveTool],
-    checkpointer,
-});
+    // Strumento di recupero
+    const retrieveTool = tool(async ({query}) => {
+        try {
+            if (!vectorStore) {
+                await initializeVectorStore();
+            }
+
+            const retrieveDocs = await vectorStore.similaritySearch(query, 3);
+            console.log(`📚 Trovati ${retrieveDocs.length} documenti pertinenti`);
+            return retrieveDocs
+                .map((doc) => doc.pageContent)
+                .join('\n');
+        } catch (error) {
+            console.error('❌ Errore durante la ricerca:', error);
+            throw error;
+        }
+    }, {
+        name: 'retrieve',
+        description: 'Recupera i frammenti di testo più rilevanti dal file PDF',
+        schema: z.object({
+            query: z.string().min(1, 'La query non può essere vuota'),
+        }),
+    });
+
+    // Creazione dell'agente
+    const checkpointer = new MemorySaver();
+
+    agent = createReactAgent({
+        llm,
+        tools: [retrieveTool],
+        checkpointer,
+    });
+
+    isInitialized = true;
+    console.log('✅ Agente inizializzato con successo!');
+    return agent;
+};
+
+// Esporto funzione che restituisce l'agente
+export const getAgent = async () => {
+    if (!agent) {
+        await initializeAgent();
+    }
+    return agent;
+};
+
 
 // // Invio della richiesta
 // try {
