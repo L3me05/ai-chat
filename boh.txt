@@ -1,0 +1,169 @@
+Perfetto, converto l’intero CSS che mi hai fornito in **classi Tailwind**, sezionando blocco per blocco.
+
+---
+
+## ✅ **1. `.chat-container`**
+
+```html
+<div className="flex flex-col h-screen max-w-[1024px] mx-auto px-4">
+                                                                   ```
+
+---
+
+## ✅ **2. `.chat-header`**
+
+```html
+<div className="flex justify-between items-center py-4 border-b border-border">
+<h1 className="text-xl font-medium">Titolo</h1>
+</div>
+  ```
+
+---
+
+## ✅ **3. `.reset-button`**
+
+```html
+<button className="flex items-center gap-2 border border-border text-text px-3 py-2 rounded cursor-pointer text-sm transition hover:bg-white/5">
+<svg>...</svg> New Chat
+</button>
+  ```
+
+---
+
+## ✅ **4. `.messages-container`**
+
+```html
+<div className="flex-1 overflow-y-auto py-4 flex flex-col gap-4">
+                                                                ```
+
+---
+
+## ✅ **5. `.empty-state`**
+
+```html
+<div className="flex flex-col items-center justify-center h-full text-center text-secondary p-8">
+                                                                                                {/* Messaggio vuoto */}
+</div>
+  ```
+
+---
+
+## ✅ **6. `.message` + varianti**
+
+```html
+<div className="flex gap-3 px-4 py-3 rounded-lg max-w-full animate-fadeIn">
+                                                                          {/* Contenuto */}
+</div>
+
+<!-- Aggiunte condizionali -->
+<!-- utente -->
+<div className="self-end bg-userMessage">...</div>
+
+<!-- AI -->
+<div className="self-start bg-aiMessage">...</div>
+                                              ```
+
+---
+
+## ✅ **7. `.message-avatar`**
+
+```html
+<div className="flex-shrink-0 font-semibold text-xs text-primary w-8 h-8 flex items-center justify-center rounded-full bg-primary/10">
+                                                                                                                                     AI
+</div>
+  ```
+
+---
+
+## ✅ **8. `.message-content`**
+
+```html
+<div className="break-words whitespace-pre-wrap">
+                                                {/* contenuto messaggio */}
+</div>
+  ```
+
+---
+
+## ✅ **9. `.loading` & `.dot`**
+
+```html
+<div className="flex gap-1.5 items-center">
+<span className="w-2 h-2 bg-secondary rounded-full animate-pulse [animation-delay:0s]"></span>
+<span className="w-2 h-2 bg-secondary rounded-full animate-pulse [animation-delay:0.2s]"></span>
+<span className="w-2 h-2 bg-secondary rounded-full animate-pulse [animation-delay:0.4s]"></span>
+</div>
+  ```
+
+---
+
+## ✅ **10. `.input-container`**
+
+```html
+<div className="flex gap-2 py-4 border-t border-border">
+                                                       ```
+
+---
+
+## ✅ **11. `textarea`**
+
+```html
+<textarea
+ className="flex-1 bg-surface text-text border border-border rounded-lg px-4 py-3 text-base resize-none outline-none transition focus:border-primary min-h-[48px] placeholder-secondary"
+/>
+ ```
+
+---
+
+## ✅ **12. `.send-button`**
+
+```html
+<button
+ className="flex items-center justify-center bg-primary text-black border-none rounded-lg w-12 h-12 cursor-pointer transition hover:opacity-90 disabled:bg-disabled disabled:opacity-50 disabled:cursor-not-allowed"
+>
+<svg>...</svg>
+</button>
+  ```
+
+---
+
+## ✅ **13. Responsive media queries**
+
+         Puoi adattare così:
+
+```html
+<div className="sm:px-4 max-w-[1024px] mx-auto px-2">
+                                                    {/* .chat-container con padding 8px sotto i 480px */}
+</div>
+
+<h1 className="text-xl sm:text-xl text-lg">Titolo</h1>
+
+<div className="w-8 h-8 text-xs sm:w-8 sm:h-8 sm:text-xs w-6 h-6 text-[0.6rem]">
+                                                                               {/* .message-avatar */}
+</div>
+  ```
+
+---
+
+## ✅ Extra: definisci animazioni custom
+
+   In `tailwind.config.js`:
+
+```js
+   extend: {
+       animation: {
+       fadeIn: 'fadeIn 0.3s ease-out',
+       pulse: 'pulse 1.5s ease-in-out infinite',
+   },
+   keyframes: {
+       fadeIn: {
+   '0%': { opacity: '0', transform: 'translateY(10px)' },
+   '100%': { opacity: '1', transform: 'translateY(0)' },
+   },
+   },
+   }
+```
+
+---
+
+Vuoi che ti generi un file completo `.tsx` di esempio usando tutte queste classi?

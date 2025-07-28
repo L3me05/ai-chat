@@ -10,6 +10,7 @@ export let vectorStore = null;
 
 const embeddings = new OpenAIEmbeddings({
     model: 'text-embedding-3-large',
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Funzione per generare un hash del contenuto del file
