@@ -116,18 +116,29 @@ function ChatPage() {
 
     return (
         <>
-            <div className="flex h-screen mx-8 py-4  gap-30">
-                <div className="flex-3/12 h-full">
+            <div className="flex h-screen mx-8 py-4 gap-4">
+                <div className="flex-3/12 flex-shrink-0">
                     <ConversationsSidebar
                         list={conversations}
                         onSelect={handleSelectThread}
                         activeId={threadId}
                     />
                 </div>
-                <div className="flex-9/12 flex-col  h-full py-4">
-                    <ChatHeader resetChat={resetChat} />
-                    <MessageList messages={messages} isLoading={isLoading} />
-                    <MessageInput inputText={inputText} setInputText={setInputText} sendMessage={sendMessage} isLoading={isLoading}/>
+                <div className="flex-9/12 flex flex-col py-4">
+                    <div className="shrink-0">
+                        <ChatHeader resetChat={resetChat} />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                        <MessageList messages={messages} isLoading={isLoading} />
+                    </div>
+                    <div className="shrink-0">
+                        <MessageInput
+                            inputText={inputText}
+                            setInputText={setInputText}
+                            sendMessage={sendMessage}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </div>
             </div>
         </>
