@@ -63,3 +63,23 @@ export const getConversationByThreadId = async (thread_id) => {
         throw err;
     }
 };
+
+//elimina conversazione e messaggi
+export const deleteConversationByThreadId = async (thread_id) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // elimina la conversazione
+        const res = await client.query('DELETE FROM conversations WHERE thread_id = $1 RETURNING id', [thread_id]);
+
+        await client.query('COMMIT');
+        return res.rows.length > 0;
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('❌ Errore in deleteConversationByThreadId:', err);
+        throw err;
+    } finally {
+        client.release();
+    }
+}

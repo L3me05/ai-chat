@@ -4,12 +4,14 @@ import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { MemorySaver } from "@langchain/langgraph";
 import { vectorStore, addDataToVectorStore, initializeVectorStore } from "./embeddings.js";
-import { existsSync } from 'fs';
-import path from "path";
+import { readdirSync } from 'fs';
+import path from 'path';
+import chokidar from 'chokidar';
 
 // Variabili globali
 let agent = null;
 let isInitialized = false;
+const DATA_DIR = path.resolve('./data');
 
 
 const initializeAgent = async () => {
@@ -20,31 +22,40 @@ const initializeAgent = async () => {
 
     console.log('🚀 Inizializzo l\'agente...');
 
-    // Verifica del file PDF
-    const pdfPath = path.resolve('./data/Seconda_guerra_modiale.pdf');
+    // Inizializzo db
+    await initializeVectorStore();
 
-    if (!existsSync(pdfPath)) {
-        console.error(`❌ File PDF non trovato: ${pdfPath}`);
-        console.error('Assicurati di aver inserito il file PDF nella cartella ./data/');
-        throw new Error('File PDF non trovato');
-    }
+    const watcher = chokidar.watch(path.resolve('./data'), {
+        ignoreInitial: true,
+        depth:0,
+    });
 
-    try {
-        // Ora le variabili d'ambiente sono disponibili!
-        console.log('🔗 Connessione al database...');
-        await initializeVectorStore();
-
-        console.log('📄 Elaborazione PDF...');
-        const wasProcessed = await addDataToVectorStore(pdfPath);
-        if (wasProcessed) {
-            console.log('✅ PDF caricato con successo nel vector store');
-        } else {
-            console.log('✅ PDF già presente nel vector store');
+    watcher.on('add', async filePath => {
+        console.log(`📥 Nuovo PDF in data/: ${filePath}`);
+        try {
+            await addDataToVectorStore(filePath);
+        } catch (err) {
+            console.error(`❌ Non ho potuto embeddare ${filePath}: ${err.message}`);
         }
-    } catch (error) {
-        console.error('❌ Errore durante l\'inizializzazione del PDF:', error);
-        throw error;
+    });
+
+    //Carico pdf direttamente da cartella data senza specificare nome
+    const files = readdirSync(DATA_DIR);
+    for(const filename of files) {
+        const filePath = path.join(DATA_DIR, filename);
+        try {
+            console.log(`Trovato in data/: ${filename}. Provo a embeddare`);
+            const processed = await addDataToVectorStore(filePath);
+            if (processed) {
+                console.log(`✅ PDF ${filename} caricato con successo nel vector store`);
+            } else {
+                console.log(`✅ PDF ${filename} già presente nel vector store`);
+            }
+        } catch (err) {
+            console.warn(`⚠️ Errore su ${filename}: ${err.message}`);
+        }
     }
+
 
     // Crea il modello LLM
     const llm = new ChatOpenAI({

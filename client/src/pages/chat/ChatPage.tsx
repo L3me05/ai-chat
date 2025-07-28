@@ -58,6 +58,23 @@ function ChatPage() {
         setInputText('');
     };
 
+    const deleteSelectThread = (idToDelete: string) => {
+        try {
+            axios.delete(`${apiUrl}/conversations/${idToDelete}`)
+                .then(res => console.log('Eliminazione avvenuta con successo', res));
+
+            setConversations(prev =>
+                prev.filter(conv => conv.thread_id !== idToDelete)
+            );
+
+            if (idToDelete === threadId) {
+                resetChat();
+            }
+        } catch (err) {
+            console.error('❌ Errore eliminando la conversazione:', err);
+        }
+    }
+
     const sendMessage = async (messageText: string) => {
         if(messageText.trim() === '' || isLoading) return;
 
@@ -95,6 +112,20 @@ function ChatPage() {
             };
 
             setMessages((prev) => [...prev, aiMessage]);
+
+            //aggiungo la conversazione se è nuova
+            setConversations(prev => {
+                const exist = prev.some(conv => conv.thread_id === threadId);
+                if(!exist) {
+                    const newConv: Conversation = {
+                        thread_id: threadId,
+                        created_at: new Date().toISOString(),
+                    }
+                    return [newConv, ...prev]
+                }
+                return prev
+            });
+
         } catch (error) {
             console.error('Error:', error);
             const errorMessage = {
@@ -110,25 +141,27 @@ function ChatPage() {
     };
 
     const resetChat = () => {
+        const newThreadId = Date.now().toString();
         setMessages([]);
-        setThreadId(Date.now().toString());
+        setThreadId(newThreadId);
     }
 
     return (
         <>
             <div className="flex h-screen mx-8 py-4 gap-4">
-                <div className="flex-3/12 flex-shrink-0">
+                <div className="flex-2/12 flex-shrink-0">
                     <ConversationsSidebar
                         list={conversations}
                         onSelect={handleSelectThread}
                         activeId={threadId}
+                        onDelete={deleteSelectThread}
                     />
                 </div>
-                <div className="flex-9/12 flex flex-col py-4">
+                <div className="flex-10/12 flex flex-col py-4">
                     <div className="shrink-0">
                         <ChatHeader resetChat={resetChat} />
                     </div>
-                    <div className="flex-1 overflow-hidden">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
                         <MessageList messages={messages} isLoading={isLoading} />
                     </div>
                     <div className="shrink-0">

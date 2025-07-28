@@ -39,3 +39,20 @@ body {
 .user-message{
     @apply bg-user-message self-end;
 }
+
+/*Scrollbar*/
+.custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-gray-400 rounded;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-900;
+}

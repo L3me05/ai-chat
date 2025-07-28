@@ -1,11 +1,13 @@
 import React from 'react';
 import type {Conversation} from "../../../model/Converation.ts";
+import {FaTrash} from "react-icons/fa";
 
 
 interface Props {
     list: Conversation[];
     onSelect: (id:string) => void;
     activeId: string;
+    onDelete: (id:string) => void;
 }
 
 
@@ -28,7 +30,7 @@ const formatDate = (dateString: string): string => {
 };
 
 
-const ConversationsSidebar: React.FC<Props> = ({list, onSelect, activeId}) => (
+const ConversationsSidebar: React.FC<Props> = ({list, onSelect, activeId, onDelete}) => (
     <aside className=" border-r overflow-y-auto flex flex-col h-full">
         <h2 className="p-2 font-semibold text-center text-xl">Chat passate</h2>
         <div
@@ -40,7 +42,12 @@ const ConversationsSidebar: React.FC<Props> = ({list, onSelect, activeId}) => (
                     onClick={() => onSelect(conv.thread_id)}
                     className={`p-2 cursor-pointer hover:bg-user-message ${conv.thread_id === activeId ? 'bg-ai-message' : ''}`}
                 >
-                    {formatDate(conv.created_at)}
+                    <div
+                        className=" flex justify-between sm:mx-5"
+                    >
+                        {formatDate(conv.created_at)}
+                        <FaTrash color="white" size="20" onClick={() =>onDelete(conv.thread_id)} />
+                    </div>
                 </div>
             ))}
         </div>

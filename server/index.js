@@ -5,7 +5,7 @@ import express from "express";
 import cors from "cors";
 import { getAgent } from "./agent.js";
 import {
-    addConversation, addMessage,
+    addConversation, addMessage, deleteConversationByThreadId,
     getConversationByThreadId,
     getConversations,
     getMessages
@@ -113,6 +113,17 @@ app.post('/generate', async (req, res) => {
         });
     }
 });
+
+app.delete('/conversations/:threadId', async (req, res) => {
+    const { threadId } = req.params;
+    try {
+        const deleted = await deleteConversationByThreadId(threadId);
+        if(!deleted) return res.status(404).json({ error: 'Conversazione non trovata' });
+        res.status(204).json({content: 'Eliminazione avvenuta con successo'});
+    } catch {
+        res.status(500).json({ error: 'Errore durante l\'eliminazione della conversazione' });
+    }
+})
 
 app.listen(port, () => {
     console.log(`🌐 Server in ascolto sulla porta ${port}`);
