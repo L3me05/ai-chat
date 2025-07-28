@@ -1,6 +1,5 @@
 // carico variabili di ambiente
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
 
 import express from "express";
 import cors from "cors";
@@ -95,7 +94,7 @@ app.post('/generate', async (req, res) => {
                 content: query,
             }],
         }, {
-            configurable: {threadId: threadId || 'default'}
+            configurable: {thread_id: threadId || 'default'}
         });
 
         const response = result.messages.at(-1)?.content;
