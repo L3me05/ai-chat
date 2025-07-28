@@ -3,6 +3,8 @@ import MessageList from "./components/MessageList.tsx";
 import MessageInput from "./components/MessageInput.tsx";
 import {useEffect, useState} from "react";
 import axios from 'axios';
+import ConversationsSidebar from "./components/ConversationsSidebar.tsx";
+import type { Conversation } from "../../model/Converation.ts";
 
 interface Message {
     id:number;
@@ -10,11 +12,36 @@ interface Message {
     isUser: boolean;
 }
 
+
 function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [threadId, setThreadId] = useState<number>(Date.now());
+    const [threadId, setThreadId] = useState<string>(Date.now().toString());
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+    useEffect(() => {
+        axios.get(`${apiUrl}/conversations`)
+            .then(res => setConversations(res.data))
+            .catch(console.error);
+    }, []);
+
+    useEffect(() => {
+        axios.get(`${apiUrl}/conversations/${threadId}/messages`)
+            .then(res => {
+                console.log('Messaggi ricevuti', res.data)
+                //formatto dati
+                const mappedMessages = res.data.map((msg: any) => ({
+                    id: msg.id,
+                    text: msg.content,
+                    isUser: msg.is_user,
+                }))
+                setMessages(mappedMessages);
+            })
+            .catch(console.error);
+    }, [threadId]);
 
     useEffect(()=> {
         scrollToBottom();
@@ -24,6 +51,12 @@ function ChatPage() {
         const messagesEndRef = document.getElementById("messagesEnd");
         messagesEndRef?.scrollIntoView({ behavior: 'smooth'});
     }
+
+    const handleSelectThread = (id: string) => {
+        console.log('cambio thread id dajeeee', id)
+        setThreadId(id);
+        setInputText('');
+    };
 
     const sendMessage = async (messageText: string) => {
         if(messageText.trim() === '' || isLoading) return;
@@ -39,14 +72,14 @@ function ChatPage() {
         setIsLoading(true);
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 
             //utilizzando axios
             const response = await axios.post(
                 `${apiUrl}/generate`,
                 {
                     query: userMessage.text,
-                        threadId: threadId,
+                    threadId: threadId,
                 },
                 {
                     headers: {
@@ -78,15 +111,35 @@ function ChatPage() {
 
     const resetChat = () => {
         setMessages([]);
-        setThreadId(Date.now());
+        setThreadId(Date.now().toString());
     }
 
     return (
         <>
-            <div className="flex flex-col sm:px-4 h-screen max-w-5xl mx-auto px-2">
-                <ChatHeader resetChat={resetChat} />
-                <MessageList messages={messages} isLoading={isLoading} />
-                <MessageInput inputText={inputText} setInputText={setInputText} sendMessage={sendMessage} isLoading={isLoading}/>
+            <div className="flex h-screen mx-8 py-4 gap-4">
+                <div className="flex-3/12 flex-shrink-0">
+                    <ConversationsSidebar
+                        list={conversations}
+                        onSelect={handleSelectThread}
+                        activeId={threadId}
+                    />
+                </div>
+                <div className="flex-9/12 flex flex-col py-4">
+                    <div className="shrink-0">
+                        <ChatHeader resetChat={resetChat} />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                        <MessageList messages={messages} isLoading={isLoading} />
+                    </div>
+                    <div className="shrink-0">
+                        <MessageInput
+                            inputText={inputText}
+                            setInputText={setInputText}
+                            sendMessage={sendMessage}
+                            isLoading={isLoading}
+                        />
+                    </div>
+                </div>
             </div>
         </>
     );
