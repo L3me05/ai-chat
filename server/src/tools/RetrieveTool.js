@@ -1,10 +1,10 @@
 import { tool } from '@langchain/core/tools';
-import {initializeVectorStore, vectorStore} from "../models/VectorStore.js";
+import { initializeVectorStore, vectorStore } from "../models/VectorStore.js";
 import { z } from 'zod';
 
 class RetrieveTool {
     constructor() {
-        this.tool = tool(async ({query}) => {
+        this.tool = tool(async ({ query }) => {
             try {
                 if (!vectorStore) {
                     await initializeVectorStore();
@@ -20,11 +20,12 @@ class RetrieveTool {
                 throw error;
             }
         }, {
-            name: 'retrieve',
+            name: 'retrieve', // Nome dello strumento
             description: 'Recupera i frammenti di testo più rilevanti dal file PDF',
             schema: z.object({
                 query: z.string().min(1, 'La query non può essere vuota'),
             }),
+            type: 'tool' // Tipo di strumento richiesto da LangChain
         });
     }
 }

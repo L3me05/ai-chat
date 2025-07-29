@@ -1,8 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { MemorySaver } from "@langchain/langgraph";
 import { RetrieveTool } from "../tools/RetrieveTool.js";
-import { initializeVectorStore, vectorStore } from "../models/VectorStore.js";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";  // Importa la funzione per inizializzare il vector store
+import { initializeVectorStore } from "../models/VectorStore.js";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 class AgentManager {
     constructor(apiKey) {
@@ -21,30 +21,30 @@ class AgentManager {
 
         // Inizializzazione del vector store
         try {
-            await initializeVectorStore();  // Assicurati che il vector store sia inizializzato prima di usare l'agente
+            await initializeVectorStore();
             console.log('✅ Vector store inizializzato');
         } catch (error) {
             console.error('❌ Errore nell\'inizializzazione del vector store:', error);
             throw error;
         }
 
-        // Crea il modello LLM (Large Language Model)
+        // Crea il modello LLM
         const llm = new ChatOpenAI({
             modelName: 'gpt-3.5-turbo',
             temperature: 0,
             apiKey: this.apiKey,
         });
 
-        // Crea lo strumento di recupero (RetrieveTool)
+        // Crea lo strumento di recupero
         const retrieveTool = new RetrieveTool();
 
         // Configura il MemorySaver
         const checkpointer = new MemorySaver();
 
-        // Crea l'agente
+        // Crea l'agente passando lo strumento corretto
         this.agent = createReactAgent({
             llm,
-            tools: [retrieveTool],
+            tools: [retrieveTool.tool],
             checkpointer,
         });
 

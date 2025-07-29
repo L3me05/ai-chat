@@ -50,7 +50,7 @@ const initializeVectorStore = async () => {
         });
 
         console.log('Vector store inizializzato con successo');
-        return embeddings ;
+        return vectorStore ;
     } catch (error) {
         console.error('Errore durante l\'inizializzazione del vector store:', error);
         throw error;
@@ -91,7 +91,7 @@ const addDataToVectorStore = async (pdfPath) => {
         const chunks = await splitter.splitDocuments(docs);
 
         // Aggiungi i documenti al vector store
-        await embeddings .addDocuments(chunks);
+        await vectorStore.addDocuments(chunks);
 
         // Aggiorna il log dei file elaborati
         const logPath = path.resolve('./processed_files.json');
