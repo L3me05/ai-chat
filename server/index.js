@@ -3,15 +3,13 @@ import 'dotenv/config';
 
 import express from "express";
 import cors from "cors";
-import { getAgent } from "./agent.js";
+import AgentManager from "./src/agents/Agent.js";
 import {
     addConversation, addMessage, deleteConversationByThreadId,
     getConversationByThreadId,
     getConversations,
     getMessages
-} from "./services/conversationService.js";
-
-
+} from "./src/services/ConversationService.js";
 
 const port = process.env.PORT || 3000;
 
@@ -31,13 +29,15 @@ if (!process.env.DB_URL) {
 console.log('✅ Variabili d\'ambiente caricate correttamente');
 console.log(`✅ Database URL configurato: ${process.env.DB_URL.split('@')[1]}`);
 
+// Inizializza l'AgentManager globalmente
+const agentManager = new AgentManager(process.env.OPENAI_API_KEY);
+
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-
 app.get('/', (req, res) => {
-   res.send('🚀 AI Chat Server is running!');
+    res.send('🚀 AI Chat Server is running!');
 });
 
 //endpoint per recuperare tutte le conversazioni
@@ -74,7 +74,7 @@ app.get('/conversations/:threadId', async (req, res) =>  {
 
 app.post('/generate', async (req, res) => {
     let {query, threadId} = req.body;
-    
+
     if (!query) {
         return res.status(400).json({ error: 'Query è richiesta' });
     }
@@ -105,10 +105,10 @@ app.post('/generate', async (req, res) => {
         //salvo il messaggio dell'utente
         await addMessage(threadId, query, true);
 
-        //invoco l'aggente e salvo la risposta
+        //invoco l'agente e salvo la risposta
         console.log('🔄 Ottengo l\'agente...');
-        const agent = await getAgent();
-        
+        const agent = await agentManager.initializeAgent();
+
         console.log('💭 Elaboro la richiesta...');
         const result = await agent.invoke({
             messages: [{
@@ -129,9 +129,9 @@ app.post('/generate', async (req, res) => {
         res.status(200).json({ content: response });
     } catch (error) {
         console.error('❌ Errore durante l\'esecuzione:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Errore durante l\'elaborazione della richiesta',
-            details: error.message 
+            details: error.message
         });
     }
 });

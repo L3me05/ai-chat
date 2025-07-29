@@ -6,9 +6,9 @@ import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export let vectorStore = null;
+let vectorStore = null;
 
-const embeddings = new OpenAIEmbeddings({
+const embeddings  = new OpenAIEmbeddings({
     model: 'text-embedding-3-large',
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -23,19 +23,19 @@ const generateFileHash = (filePath) => {
 const getProcessedFilesLog = () => {
     const logPath = path.resolve('./processed_files.json');
     try {
-        return existsSync(logPath) 
-            ? JSON.parse(readFileSync(logPath, 'utf-8')) 
+        return existsSync(logPath)
+            ? JSON.parse(readFileSync(logPath, 'utf-8'))
             : {};
     } catch {
         return {};
     }
 };
 
-export const initializeVectorStore = async () => {
-    if (vectorStore) return vectorStore;
+const initializeVectorStore = async () => {
+    if (vectorStore ) return vectorStore ;
 
     try {
-        vectorStore = await PGVectorStore.initialize(embeddings, {
+        vectorStore  = await PGVectorStore.initialize(embeddings , {
             postgresConnectionOptions: {
                 connectionString: process.env.DB_URL,
             },
@@ -48,25 +48,25 @@ export const initializeVectorStore = async () => {
             },
             distanceStrategy: 'cosine',
         });
-        
+
         console.log('Vector store inizializzato con successo');
-        return vectorStore;
+        return embeddings ;
     } catch (error) {
         console.error('Errore durante l\'inizializzazione del vector store:', error);
         throw error;
     }
 };
 
-export const addDataToVectorStore = async (pdfPath) => {
+const addDataToVectorStore = async (pdfPath) => {
     if (!existsSync(pdfPath)) {
         throw new Error(`File PDF non trovato: ${pdfPath}`);
     }
 
     // Calcola l'hash del file
     const fileHash = generateFileHash(pdfPath);
-    
-    // Controlla se il file è già stato elaborato
     const processedFiles = getProcessedFilesLog();
+
+    // Controlla se il file è già stato elaborato
     if (processedFiles[pdfPath] === fileHash) {
         console.log(`✅ Documento già presente nel database. Nessuna elaborazione necessaria.`);
         return false;
@@ -74,7 +74,7 @@ export const addDataToVectorStore = async (pdfPath) => {
 
     try {
         // Inizializza il vector store se non è già stato fatto
-        if (!vectorStore) {
+        if (!vectorStore ) {
             await initializeVectorStore();
         }
 
@@ -91,8 +91,8 @@ export const addDataToVectorStore = async (pdfPath) => {
         const chunks = await splitter.splitDocuments(docs);
 
         // Aggiungi i documenti al vector store
-        await vectorStore.addDocuments(chunks);
-        
+        await embeddings .addDocuments(chunks);
+
         // Aggiorna il log dei file elaborati
         const logPath = path.resolve('./processed_files.json');
         processedFiles[pdfPath] = fileHash;
@@ -105,3 +105,5 @@ export const addDataToVectorStore = async (pdfPath) => {
         throw error;
     }
 }
+
+export { vectorStore, addDataToVectorStore, initializeVectorStore };
