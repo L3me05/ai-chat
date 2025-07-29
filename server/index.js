@@ -61,6 +61,17 @@ app.get('/conversations/:threadId/messages', async (req, res) => {
     }
 })
 
+//endpoin recupero conversazione specifica
+app.get('/conversations/:threadId', async (req, res) =>  {
+    const { threadId } = req.params;
+    try {
+        const conversation = await getConversationByThreadId(threadId);
+        res.status(200).json(conversation);
+    } catch (error) {
+        res.status(500).json({error: 'Errore nel recupero della conversazione'});
+    }
+})
+
 app.post('/generate', async (req, res) => {
     let {query, threadId} = req.body;
     
@@ -77,9 +88,20 @@ app.post('/generate', async (req, res) => {
 
         //se non esiste la creo
         if (!conv) {
+            // Genero il titolo di default
+            let title = 'New chat';
+            if (query && query.trim().length > 0) {
+                title = query.substring(0, 30);
+
+                if (query.length > 30) {
+                    title += '...';
+                }
+            }
+
             threadId = threadId.toString() || Date.now().toString();
-            conv = await addConversation(threadId);
+            conv = await addConversation(threadId, title);
         }
+
         //salvo il messaggio dell'utente
         await addMessage(threadId, query, true);
 

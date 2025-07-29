@@ -29,9 +29,9 @@ export const getMessages = async (thread_id) => {
 };
 
 //funzione per aggiungere una conversazione
-export const addConversation = async (thread_id) => {
+export const addConversation = async (thread_id, title) => {
     try {
-        const result = await pool.query('INSERT INTO conversations (thread_id) VALUES ($1) RETURNING *', [thread_id]);
+        const result = await pool.query('INSERT INTO conversations (thread_id, title) VALUES ($1, $2) RETURNING *', [thread_id, title]);
         return result.rows[0];
     } catch (err) {
         console.error('Errore nella creazione di una conversazione: ',err);
@@ -63,6 +63,7 @@ export const getConversationByThreadId = async (thread_id) => {
         throw err;
     }
 };
+
 
 //elimina conversazione e messaggi
 export const deleteConversationByThreadId = async (thread_id) => {

@@ -19,6 +19,7 @@ function ChatPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [threadId, setThreadId] = useState<string>(Date.now().toString());
     const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [sidebar, setSidebar] = useState(true);
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -117,11 +118,19 @@ function ChatPage() {
             setConversations(prev => {
                 const exist = prev.some(conv => conv.thread_id === threadId);
                 if(!exist) {
-                    const newConv: Conversation = {
-                        thread_id: threadId,
-                        created_at: new Date().toISOString(),
-                    }
-                    return [newConv, ...prev]
+                    //recupero questa conversazione dal threadId per aggiornare lo stato
+                    axios.get(`${apiUrl}/conversations/${threadId}`)
+                        .then(res => {
+                            console.log('dati ricevuti: ', res.data)
+                            const newConv: Conversation = {
+                                thread_id: threadId,
+                                created_at: res.data.created_at,
+                                title: res.data.title,
+                            }
+                            setConversations(() => [newConv, ...prev]);
+                        })
+                        .catch(err => console.error(err));
+                    return prev
                 }
                 return prev
             });
@@ -149,17 +158,22 @@ function ChatPage() {
     return (
         <>
             <div className="flex h-screen mx-8 py-4 gap-4">
-                <div className="flex-2/12 flex-shrink-0">
-                    <ConversationsSidebar
-                        list={conversations}
-                        onSelect={handleSelectThread}
-                        activeId={threadId}
-                        onDelete={deleteSelectThread}
-                    />
-                </div>
-                <div className="flex-10/12 flex flex-col py-4">
+
+                {sidebar && (
+                    <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 md:relative absolute inset-0 z-10 md:z-auto">
+                        <ConversationsSidebar
+                            list={conversations}
+                            onSelect={handleSelectThread}
+                            activeId={threadId}
+                            onDelete={deleteSelectThread}
+                            changeSidebar={() => setSidebar(false)}
+                        />
+                    </div>
+                )}
+
+                <div className={`flex-19/24 flex flex-col ${sidebar ? 'hidden md:flex' : 'flex'}`}>
                     <div className="shrink-0">
-                        <ChatHeader resetChat={resetChat} />
+                        <ChatHeader resetChat={resetChat} changeSidebar={()=> setSidebar(!sidebar)} sidebar={sidebar} />
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
                         <MessageList messages={messages} isLoading={isLoading} />
