@@ -30,7 +30,7 @@ console.log('✅ Variabili d\'ambiente caricate correttamente');
 console.log(`✅ Database URL configurato: ${process.env.DB_URL.split('@')[1]}`);
 
 // Inizializza l'AgentManager globalmente
-const agentManager = new AgentManager(process.env.OPENAI_API_KEY);
+const agentManager = new AgentManager(process.env.OPENAI_API_KEY, process.env.TAVILY_API_KEY);
 
 const app = express();
 app.use(express.json());

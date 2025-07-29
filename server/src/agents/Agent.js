@@ -3,10 +3,12 @@ import { MemorySaver } from "@langchain/langgraph";
 import { RetrieveTool } from "../tools/RetrieveTool.js";
 import { initializeVectorStore } from "../models/VectorStore.js";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import WebSearchTool from "../tools/WebSearchTool.js";
 
 class AgentManager {
-    constructor(apiKey) {
+    constructor(apiKey, searchApiKey) {
         this.apiKey = apiKey;
+        this.searchApiKey = searchApiKey;
         this.agent = null;
         this.isInitialized = false;
     }
@@ -38,13 +40,16 @@ class AgentManager {
         // Crea lo strumento di recupero
         const retrieveTool = new RetrieveTool();
 
+        //Inizializza il tool di ricerca web
+        const webSearchTool = new WebSearchTool(this.searchApiKey);
+
         // Configura il MemorySaver
         const checkpointer = new MemorySaver();
 
         // Crea l'agente passando lo strumento corretto
         this.agent = createReactAgent({
             llm,
-            tools: [retrieveTool.tool],
+            tools: [retrieveTool.tool, webSearchTool.tool],
             checkpointer,
         });
 
