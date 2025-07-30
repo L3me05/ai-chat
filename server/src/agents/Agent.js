@@ -4,6 +4,7 @@ import { RetrieveTool } from "../tools/RetrieveTool.js";
 import { initializeVectorStore } from "../models/VectorStore.js";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import WebSearchTool from "../tools/WebSearchTool.js";
+import EmailTool from "../tools/EmailTool.js";
 
 class AgentManager {
     constructor(apiKey, searchApiKey) {
@@ -37,11 +38,15 @@ class AgentManager {
             apiKey: this.apiKey,
         });
 
-        // Crea lo strumento di recupero
+        // Inizializzo gli strumenti
         const retrieveTool = new RetrieveTool();
-
-        //Inizializza il tool di ricerca web
         const webSearchTool = new WebSearchTool(this.searchApiKey);
+        const emailTool = new EmailTool({
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        });
 
         // Configura il MemorySaver
         const checkpointer = new MemorySaver();
@@ -49,7 +54,7 @@ class AgentManager {
         // Crea l'agente passando lo strumento corretto
         this.agent = createReactAgent({
             llm,
-            tools: [retrieveTool.tool, webSearchTool.tool],
+            tools: [retrieveTool.tool, webSearchTool.tool, emailTool.tool],
             checkpointer,
         });
 
