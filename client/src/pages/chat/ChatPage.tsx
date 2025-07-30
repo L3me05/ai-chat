@@ -5,10 +5,10 @@ import { useMessages } from '../../hooks/useMessages';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useConversations } from '../../hooks/useConversations';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
-import ChatHeader from './components/ChatHeader';
-import MessageList from './components/MessageList';
-import MessageInput from './components/MessageInput';
-import ConversationsSidebar from './components/ConversationsSidebar';
+import ChatHeader from '../../components/ChatHeader';
+import MessageList from '../../components/MessageList';
+import MessageInput from '../../components/MessageInput';
+import ConversationsSidebar from '../../components/ConversationsSidebar';
 
 function ChatPage() {
     const [inputText, setInputText] = useState('');

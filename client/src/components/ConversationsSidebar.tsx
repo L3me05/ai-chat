@@ -1,5 +1,5 @@
 import React from 'react';
-import type {Conversation} from "../../../model/Converation.ts";
+import type {Conversation} from "../model/Converation.ts";
 import {FaTrash} from "react-icons/fa";
 import { CiMenuFries} from "react-icons/ci";
 

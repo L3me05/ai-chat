@@ -1,6 +1,7 @@
 // hooks/useSendMessage.ts
-import type { Message } from '../types';
+
 import type { ApiService } from '../services/apiService';
+import type {Message} from "../model/Message.ts";
 
 export const useSendMessage = (
     apiService: ApiService,
