@@ -1,194 +1,92 @@
-import ChatHeader from "./components/ChatHeader.tsx";
-import MessageList from "./components/MessageList.tsx";
-import MessageInput from "./components/MessageInput.tsx";
-import {useEffect, useState} from "react";
-import axios from 'axios';
-import ConversationsSidebar from "./components/ConversationsSidebar.tsx";
-import type { Conversation } from "../../model/Converation.ts";
-
-interface Message {
-    id:number;
-    text:string;
-    isUser: boolean;
-}
-
+// pages/chat/ChatPage.tsx
+import { useState, useMemo } from 'react';
+import { ApiService } from '../../services/apiService';
+import { useMessages } from '../../hooks/useMessages';
+import { useSendMessage } from '../../hooks/useSendMessage';
+import { useConversations } from '../../hooks/useConversations';
+import { useAutoScroll } from '../../hooks/useAutoScroll';
+import ChatHeader from './components/ChatHeader';
+import MessageList from './components/MessageList';
+import MessageInput from './components/MessageInput';
+import ConversationsSidebar from './components/ConversationsSidebar';
 
 function ChatPage() {
-    const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [threadId, setThreadId] = useState<string>(Date.now().toString());
-    const [conversations, setConversations] = useState<Conversation[]>([]);
     const [sidebar, setSidebar] = useState(true);
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiService = useMemo(() => new ApiService(apiUrl), [apiUrl]);
 
-    useEffect(() => {
-        axios.get(`${apiUrl}/conversations`)
-            .then(res => setConversations(res.data))
-            .catch(console.error);
-    }, []);
+    const {
+        conversations,
+        threadId,
+        handleSelectThread,
+        deleteSelectThread,
+        addNewConversation,
+        resetThread
+    } = useConversations(apiService);
 
-    useEffect(() => {
-        axios.get(`${apiUrl}/conversations/${threadId}/messages`)
-            .then(res => {
-                console.log('Messaggi ricevuti', res.data)
-                //formatto dati
-                const mappedMessages = res.data.map((msg: any) => ({
-                    id: msg.id,
-                    text: msg.content,
-                    isUser: msg.is_user,
-                }))
-                setMessages(mappedMessages);
-            })
-            .catch(console.error);
-    }, [threadId]);
+    const { messages, isLoading, setIsLoading, addMessage, resetMessages } = useMessages(threadId, apiService);
 
-    useEffect(()=> {
-        scrollToBottom();
-    }, [messages]);
+    const { sendMessage } = useSendMessage(
+        apiService,
+        addMessage,
+        setIsLoading,
+        addNewConversation
+    );
 
-    const scrollToBottom = () => {
-        const messagesEndRef = document.getElementById("messagesEnd");
-        messagesEndRef?.scrollIntoView({ behavior: 'smooth'});
-    }
+    useAutoScroll([messages]);
 
-    const handleSelectThread = (id: string) => {
-        console.log('cambio thread id dajeeee', id)
-        setThreadId(id);
+    const handleSendMessage = async (messageText: string) => {
+        await sendMessage(messageText, threadId);
         setInputText('');
     };
 
-    const deleteSelectThread = (idToDelete: string) => {
-        try {
-            axios.delete(`${apiUrl}/conversations/${idToDelete}`)
-                .then(res => console.log('Eliminazione avvenuta con successo', res));
-
-            setConversations(prev =>
-                prev.filter(conv => conv.thread_id !== idToDelete)
-            );
-
-            if (idToDelete === threadId) {
-                resetChat();
-            }
-        } catch (err) {
-            console.error('❌ Errore eliminando la conversazione:', err);
-        }
-    }
-
-    const sendMessage = async (messageText: string) => {
-        if(messageText.trim() === '' || isLoading) return;
-
-        const userMessage = {
-            id: Date.now(),
-            text: messageText.trim(),
-            isUser: true,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-        setInputText('');
-        setIsLoading(true);
-
-        try {
-
-
-            //utilizzando axios
-            const response = await axios.post(
-                `${apiUrl}/generate`,
-                {
-                    query: userMessage.text,
-                    threadId: threadId,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            const aiMessage = {
-                id: Date.now(),
-                text: response.data.content || response.data || 'Nessuna risposta ricevuta',
-                isUser: false,
-            };
-
-            setMessages((prev) => [...prev, aiMessage]);
-
-            //aggiungo la conversazione se è nuova
-            setConversations(prev => {
-                const exist = prev.some(conv => conv.thread_id === threadId);
-                if(!exist) {
-                    //recupero questa conversazione dal threadId per aggiornare lo stato
-                    axios.get(`${apiUrl}/conversations/${threadId}`)
-                        .then(res => {
-                            console.log('dati ricevuti: ', res.data)
-                            const newConv: Conversation = {
-                                thread_id: threadId,
-                                created_at: res.data.created_at,
-                                title: res.data.title,
-                            }
-                            setConversations(() => [newConv, ...prev]);
-                        })
-                        .catch(err => console.error(err));
-                    return prev
-                }
-                return prev
-            });
-
-        } catch (error) {
-            console.error('Error:', error);
-            const errorMessage = {
-                id: Date.now(),
-                text: 'Sorry, there was an error processing your request.',
-                isUser: false,
-            };
-
-            setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
+    const handleResetChat = () => {
+        resetThread();
+        resetMessages();
     };
 
-    const resetChat = () => {
-        const newThreadId = Date.now().toString();
-        setMessages([]);
-        setThreadId(newThreadId);
-    }
+    const handleSelectConversation = (id: string) => {
+        handleSelectThread(id);
+        setInputText('');
+    };
 
     return (
-        <>
-            <div className="flex h-screen mx-8 py-4 gap-4">
+        <div className="flex h-screen mx-8 py-4 gap-4">
+            {sidebar && (
+                <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 md:relative absolute inset-0 z-10 md:z-auto">
+                    <ConversationsSidebar
+                        list={conversations}
+                        onSelect={handleSelectConversation}
+                        activeId={threadId}
+                        onDelete={deleteSelectThread}
+                        changeSidebar={() => setSidebar(false)}
+                    />
+                </div>
+            )}
 
-                {sidebar && (
-                    <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 md:relative absolute inset-0 z-10 md:z-auto">
-                        <ConversationsSidebar
-                            list={conversations}
-                            onSelect={handleSelectThread}
-                            activeId={threadId}
-                            onDelete={deleteSelectThread}
-                            changeSidebar={() => setSidebar(false)}
-                        />
-                    </div>
-                )}
-
-                <div className={`flex-19/24 flex flex-col ${sidebar ? 'hidden md:flex' : 'flex'}`}>
-                    <div className="shrink-0">
-                        <ChatHeader resetChat={resetChat} changeSidebar={()=> setSidebar(!sidebar)} sidebar={sidebar} />
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
-                        <MessageList messages={messages} isLoading={isLoading} />
-                    </div>
-                    <div className="shrink-0">
-                        <MessageInput
-                            inputText={inputText}
-                            setInputText={setInputText}
-                            sendMessage={sendMessage}
-                            isLoading={isLoading}
-                        />
-                    </div>
+            <div className={`flex-19/24 flex flex-col ${sidebar ? 'hidden md:flex' : 'flex'}`}>
+                <div className="shrink-0">
+                    <ChatHeader
+                        resetChat={handleResetChat}
+                        changeSidebar={() => setSidebar(!sidebar)}
+                        sidebar={sidebar}
+                    />
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
+                    <MessageList messages={messages} isLoading={isLoading} />
+                </div>
+                <div className="shrink-0">
+                    <MessageInput
+                        inputText={inputText}
+                        setInputText={setInputText}
+                        sendMessage={handleSendMessage}
+                        isLoading={isLoading}
+                    />
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
