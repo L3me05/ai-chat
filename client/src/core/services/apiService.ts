@@ -1,7 +1,7 @@
 // services/apiService.ts
 import axios from 'axios';
-import type { Conversation } from '../model/Converation';
-import type {Message} from "../model/Message.ts";
+import type { Conversation } from '../../model/Converation.ts';
+import type {Message} from "../../model/Message.ts";
 
 export class ApiService {
     private apiUrl: string;

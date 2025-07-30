@@ -1,7 +1,7 @@
 // hooks/useConversations.ts
 import { useState, useEffect } from 'react';
 import type { Conversation } from '../model/Converation';
-import type { ApiService } from '../services/apiService';
+import type { ApiService } from '../core/services/apiService';
 
 export const useConversations = (apiService: ApiService) => {
     const [conversations, setConversations] = useState<Conversation[]>([]);

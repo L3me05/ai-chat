@@ -1,6 +1,6 @@
 // hooks/useMessages.ts
 import { useState, useEffect } from 'react';
-import type { ApiService } from '../services/apiService';
+import type { ApiService } from '../core/services/apiService';
 import type {Message} from "../model/Message.ts";
 
 export const useMessages = (threadId: string, apiService: ApiService) => {

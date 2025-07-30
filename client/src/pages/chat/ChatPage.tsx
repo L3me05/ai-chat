@@ -1,14 +1,14 @@
 // pages/chat/ChatPage.tsx
 import { useState, useMemo } from 'react';
-import { ApiService } from '../../services/apiService';
+import { ApiService } from '../../core/services/apiService';
 import { useMessages } from '../../hooks/useMessages';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useConversations } from '../../hooks/useConversations';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
-import ChatHeader from '../../components/ChatHeader';
-import MessageList from '../../components/MessageList';
-import MessageInput from '../../components/MessageInput';
-import ConversationsSidebar from '../../components/ConversationsSidebar';
+import ChatHeader from './components/ChatHeader';
+import MessageList from './components/MessageList';
+import MessageInput from './components/MessageInput';
+import ConversationsSidebar from './components/ConversationsSidebar';
 
 function ChatPage() {
     const [inputText, setInputText] = useState('');
@@ -53,7 +53,7 @@ function ChatPage() {
     };
 
     return (
-        <div className="flex h-screen mx-8 py-4 gap-4">
+        <div className="flex h-full mx-8 py-4 gap-4">
             {sidebar && (
                 <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 md:relative absolute inset-0 z-10 md:z-auto">
                     <ConversationsSidebar
