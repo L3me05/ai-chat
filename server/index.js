@@ -10,6 +10,7 @@ import {
     getConversations,
     getMessages
 } from "./src/services/ConversationService.js";
+import {authCheck, handleAuthError} from "./src/middleware/authCheck.js";
 
 const port = process.env.PORT || 3000;
 
@@ -39,6 +40,11 @@ app.use(cors());
 app.get('/', (req, res) => {
     res.send('🚀 AI Chat Server is running!');
 });
+
+
+//implementazione security
+app.use(authCheck);
+app.use(handleAuthError);
 
 //endpoint per recuperare tutte le conversazioni
 app.get('/conversations', async (req, res)=> {

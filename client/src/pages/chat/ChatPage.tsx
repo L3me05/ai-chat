@@ -1,22 +1,31 @@
-// pages/chat/ChatPage.tsx
+// src/pages/chat/ChatPage.tsx
 import { useState, useMemo } from 'react';
-import { ApiService } from '../../core/services/apiService';
+import { useAuth0 } from '@auth0/auth0-react';
+import { AuthApiService } from '../../core/services/authApiService';
+import { useConversations } from '../../hooks/useConversations';
 import { useMessages } from '../../hooks/useMessages';
 import { useSendMessage } from '../../hooks/useSendMessage';
-import { useConversations } from '../../hooks/useConversations';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import MessageInput from './components/MessageInput';
 import ConversationsSidebar from './components/ConversationsSidebar';
 
-function ChatPage() {
+export default function ChatPage() {
     const [inputText, setInputText] = useState('');
     const [sidebar, setSidebar] = useState(true);
 
+    // 1) Prendi la funzione Auth0 per ottenere il token
+    const { getAccessTokenSilently } = useAuth0();
+    // 2) Url della tua API (con fallback in locale)
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    const apiService = useMemo(() => new ApiService(apiUrl), [apiUrl]);
+    // 3) Memoizza l’istanza di AuthApiService passando anche getAccessTokenSilently
+    const apiService = useMemo(
+        () => new AuthApiService(apiUrl, getAccessTokenSilently),
+        [apiUrl, getAccessTokenSilently]
+    );
 
+    // Hook per gestire le conversazioni
     const {
         conversations,
         threadId,
@@ -26,8 +35,16 @@ function ChatPage() {
         resetThread
     } = useConversations(apiService);
 
-    const { messages, isLoading, setIsLoading, addMessage, resetMessages } = useMessages(threadId, apiService);
+    // Hook per gestire i messaggi della conversazione corrente
+    const {
+        messages,
+        isLoading,
+        setIsLoading,
+        addMessage,
+        resetMessages
+    } = useMessages(threadId, apiService);
 
+    // Hook per inviare nuovi messaggi
     const { sendMessage } = useSendMessage(
         apiService,
         addMessage,
@@ -35,8 +52,10 @@ function ChatPage() {
         addNewConversation
     );
 
+    // Scroll automatico in fondo alla chat
     useAutoScroll([messages]);
 
+    // Handlers del form
     const handleSendMessage = async (messageText: string) => {
         await sendMessage(messageText, threadId);
         setInputText('');
@@ -89,5 +108,3 @@ function ChatPage() {
         </div>
     );
 }
-
-export default ChatPage;

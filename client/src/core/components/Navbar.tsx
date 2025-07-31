@@ -1,5 +1,6 @@
 import logo from "../../assets/logo.png"
 import { Link, useLocation } from "react-router-dom";
+import AuthButtons from "./AuthButtons.tsx";
 
 function Navbar() {
     const location = useLocation();
@@ -12,7 +13,7 @@ function Navbar() {
                     <h1 className="text-2xl text-sky-700 font-bold">MySites</h1>
                 </div>
                 <div className="flex gap-8 items-center text-xl text-sky-700 font-semibold">
-                    <Link to="/home" className={`hover:text-sky-500 transition-colors ${location.pathname === '/home' ? 'text-sky-500' : ''}`}>
+                    <Link to="/" className={`hover:text-sky-500 transition-colors ${location.pathname === '/' ? 'text-sky-500' : ''}`}>
                         Home
                     </Link>
                     <Link to="/chatAI" className={`hover:text-sky-500 transition-colors ${location.pathname === '/chatAI' ? 'text-sky-500' : ''}`}>
@@ -20,8 +21,9 @@ function Navbar() {
                     </Link>
                 </div>
                 <div className="flex flex-row-reverse flex-8/12 gap-4  items-center text-xl text-sky-700 font-semibold">
-                    <button className="hover:text-sky-500 transition-colors">Login</button>
-                    <button className="hover:text-sky-500 transition-colors">Signing</button>
+                    {/*<button className="hover:text-sky-500 transition-colors">Login</button>*/}
+                    {/*<button className="hover:text-sky-500 transition-colors">Signing</button>*/}
+                    <AuthButtons className="header-auth-buttons" />
                 </div>
             </div>
         </>

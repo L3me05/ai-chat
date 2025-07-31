@@ -1,9 +1,9 @@
 // hooks/useConversations.ts
 import { useState, useEffect } from 'react';
 import type { Conversation } from '../model/Converation';
-import type { ApiService } from '../core/services/apiService';
+import type { AuthApiService } from '../core/services/authApiService.ts';
 
-export const useConversations = (apiService: ApiService) => {
+export const useConversations = (apiService: AuthApiService) => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [threadId, setThreadId] = useState<string>(Date.now().toString());
 

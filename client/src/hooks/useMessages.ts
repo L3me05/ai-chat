@@ -1,9 +1,9 @@
 // hooks/useMessages.ts
 import { useState, useEffect } from 'react';
-import type { ApiService } from '../core/services/apiService';
+import type { AuthApiService } from '../core/services/authApiService.ts';
 import type {Message} from "../model/Message.ts";
 
-export const useMessages = (threadId: string, apiService: ApiService) => {
+export const useMessages = (threadId: string, apiService: AuthApiService) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 

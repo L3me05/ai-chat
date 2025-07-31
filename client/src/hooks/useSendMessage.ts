@@ -1,10 +1,10 @@
 // hooks/useSendMessage.ts
 
-import type { ApiService } from '../core/services/apiService';
 import type {Message} from "../model/Message.ts";
+import type {AuthApiService} from "../core/services/authApiService.ts";
 
 export const useSendMessage = (
-    apiService: ApiService,
+    apiService: AuthApiService,
     addMessage: (message: Message) => void,
     setIsLoading: (loading: boolean) => void,
     onNewConversation: (threadId: string) => void
