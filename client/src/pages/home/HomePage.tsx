@@ -28,7 +28,7 @@ function HomePage() {
                             <span className="text-2xl">🚀</span>
                         </div>
                         <h3 className="text-xl font-semibold mb-3 text-gray-800">Veloce</h3>
-                        <p className="text-gray-600">Lesgoski lesko</p>
+                        <p className="text-gray-600">...</p>
                     </div>
 
                     <div className="text-center p-6 bg-white rounded-lg shadow-md">
@@ -36,7 +36,7 @@ function HomePage() {
                             <span className="text-2xl">🎨</span>
                         </div>
                         <h3 className="text-xl font-semibold mb-3 text-gray-800">Personalizzabile</h3>
-                        <p className="text-gray-600">Daje</p>
+                        <p className="text-gray-600">...</p>
                     </div>
 
                     <div className="text-center p-6 bg-white rounded-lg shadow-md">
@@ -44,7 +44,7 @@ function HomePage() {
                             <span className="text-2xl">📱</span>
                         </div>
                         <h3 className="text-xl font-semibold mb-3 text-gray-800">Responsive</h3>
-                        <p className="text-gray-600">Magari</p>
+                        <p className="text-gray-600">...</p>
                     </div>
                 </div>
             </div>

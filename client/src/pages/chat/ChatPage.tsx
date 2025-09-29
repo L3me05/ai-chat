@@ -69,12 +69,13 @@ export default function ChatPage() {
     const handleSelectConversation = (id: string) => {
         handleSelectThread(id);
         setInputText('');
+        setSidebar(false);
     };
 
     return (
         <div className="flex h-full mx-8 py-4 gap-4">
             {sidebar && (
-                <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 md:relative absolute inset-0 z-10 md:z-auto">
+                <div className="w-full md:flex-5/24 lg:flex-5/24 flex-shrink-0 ">
                     <ConversationsSidebar
                         list={conversations}
                         onSelect={handleSelectConversation}

@@ -33,7 +33,7 @@ interface Props {
 
 
 const ConversationsSidebar: React.FC<Props> = ({list, onSelect, activeId, onDelete, changeSidebar}) => (
-    <aside className=" border-r overflow-y-auto flex flex-col h-full ">
+    <aside className=" md:border-r overflow-y-auto flex flex-col h-full ">
         <div className="flex items-center justify-between w-full">
             <h2 className="p-2 text-center text-xl font-medium flex-grow text-center">Chat passate</h2>
             <CiMenuFries
